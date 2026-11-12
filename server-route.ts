@@ -39,11 +39,8 @@ async function writeBooking(req:Request){
  const vals=[b.lab,b.date,b.start,b.end,title,admin&&b.action?(b.kind==='practice'?'practice':'class'):'practice',status,String(b.name||'Instructor').slice(0,120),String(b.email||adminEmail).slice(0,200),b.program||'PN',String(b.supplies||'').slice(0,2000),Number(b.companions||0)];
  if(b.action==='edit'){const r=await db().prepare("UPDATE bookings SET lab=?,date=?,start=?,end=?,title=?,kind=?,status=?,name=?,email=?,program=?,supplies=?,companions=? WHERE id=? AND NOT EXISTS (SELECT 1 FROM bookings x WHERE x.status='approved' AND x.lab=? AND x.date=? AND x.start<? AND x.end>? AND x.id!=?)").bind(...vals,id,b.lab,b.date,b.end,b.start,id).run();if(!r.meta.changes)return json({error:'Entry changed or slot unavailable. Refresh and try again.'},409);}
  else {const r=await db().prepare("INSERT INTO bookings (id,lab,date,start,end,title,kind,status,name,email,program,supplies,companions,created) SELECT ?,?,?,?,?,?,?,?,?,?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM bookings WHERE status='approved' AND lab=? AND date=? AND start<? AND end>?)").bind(id,...vals,new Date().toISOString(),b.lab,b.date,b.end,b.start).run();if(!r.meta.changes)return json({error:'A booking just filled this slot. Please choose another time.'},409);}
- let emailSent=false;
- if(!b.action){try{
- const response=await fetch('https://formsubmit.co/ajax/'+adminEmail,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','Referer':'https://clairewjs.github.io/campus-lab-booking/'},signal:AbortSignal.timeout(12000),body:JSON.stringify({_subject:'LabSpace booking request: '+b.date,_captcha:'false',_template:'table',_url:'https://clairewjs.github.io/campus-lab-booking/',name:b.name,email:b.email,program:b.program,lab:b.lab==='big'?'Big Lab':'Small Lab',date:b.date,start:b.start,end:b.end,additional_students:b.companions,total_students:Number(b.companions)+1,supplies:b.supplies,request_id:id,review:'https://campus-lab-booking.clairewjs.chatgpt.site/?view=instructor'})});
- const result:any=await response.json();emailSent=response.ok&&(result.success===true||result.success==='true');
- }catch{}}
+ // Browser sends the fixed-recipient EmailJS template after the request is saved.
+ const emailSent=false;
  return json({ok:true,id,emailSent});
  }catch{return json({error:'Unable to save this change. Please try again.'},500);}
 }

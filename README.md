@@ -15,16 +15,16 @@ The instructor signs in with the authorized ChatGPT account. Every instructor mu
 
 1. Students view approved bookings and classes, filter by lab, and request a time.
 2. Requests save as pending. They do not reserve a calendar slot.
-3. An email notification is submitted to FormSubmit for delivery to Claire. **One-time recipient activation is required.** A successful submission to the email provider does not prove inbox delivery.
+3. After saving, the browser sends the fixed-recipient EmailJS template through the authorized Gmail service to Claire. Provider acceptance does not prove inbox delivery.
 4. Claire reviews requests in the instructor workspace. Approval checks for overlaps and writes atomically. Classes and manual bookings can also be added, edited and removed.
 
 Bookings use Vancouver wall-clock dates and times. The calendar shows 7 am–8 pm; requests outside this display can be entered in the form. Overnight bookings must be split into separate dates. Capacity limits and campus opening hours are not yet configured.
 
 ## Email setup
 
-FormSubmit does not require a custom domain or mailbox OAuth. The first submission triggers an activation message to `claire.song@sprottshaw.com`; the recipient must activate it. The app submits only the booking fields needed for the notification and provides an email-draft fallback if the provider returns an error. FormSubmit's official documentation: https://formsubmit.co/documentation
+EmailJS is connected to the authorized Gmail sender. The template recipient is fixed at `claire.song@sprottshaw.com`; the requester cannot select another recipient. `app/booking-email.ts` contains only public integration identifiers. No mailbox credentials, OAuth tokens or private keys are in the browser or repository. Notifications are sent only after the shared backend saves the pending request. Failed notification calls leave the request saved and offer an email-draft fallback.
 
-The earlier Resend option is not used. No Resend keys are required.
+Resend and FormSubmit are not used by this version. No custom domain is required.
 
 ## Development
 
@@ -41,4 +41,4 @@ Preserve `.openai/hosting.json` for the existing backend deployment. Backend cha
 
 ## Repository files
 
-`index.html` is the self-contained published student page. `app.tsx`, `styles.css`, `server-route.ts`, and `schema.ts` provide readable application source. `LabSpace-source.zip` contains the complete buildable project, dependencies lockfile, migrations and rebuild scripts. Extract it before development.
+`index.html` is the self-contained student page. Readable application source is included alongside it; `LabSpace-source.zip` contains the complete project with the lockfile and migrations. Extract the archive before development. Rebuilding creates `docs/app.js`, `docs/style.css` and `docs/index.html`; combine them into the root `index.html` when updating this Pages deployment.
